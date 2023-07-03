@@ -18,8 +18,9 @@
     <CollectionView x:Name="notesCollection"
                         ItemsSource="{Binding AllNotes}"
                         Margin="20"
-                SelectionChangedCommand="{Binding SelectNoteCommand}"
-                SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}">
+                    SelectionMode="Single"
+                    SelectionChangedCommand="{Binding SelectNoteCommand}"
+                    SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}">
 
         <!-- Designate how the collection of items are laid out -->
         <CollectionView.ItemsLayout>
