@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewModels="clr-namespace:AR_Notas.ViewModels"
              x:Class="AR_Notas.Views.AR_AllNotes"
-             Title="AR_AllNotes">
+             Title="AR_AllNotes"
+             NavigatedTo="ContentPage_NavigatedTo">
     <!-- Add an item to the toolbar -->
     <ContentPage.BindingContext>
         <viewModels:AR_NotesViewModel />

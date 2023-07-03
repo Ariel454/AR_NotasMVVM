@@ -8,4 +8,8 @@ public partial class AR_AllNotes : ContentPage
 
     }
 
+    private void ContentPage_NavigatedTo(object sender, NavigatedToEventArgs e)
+    {
+        notesCollection.SelectedItem = null;
+    }
 }

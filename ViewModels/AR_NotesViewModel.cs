@@ -53,11 +53,13 @@ namespace AR_Notas.ViewModels
 
                 // If note is found, update it
                 if (matchedNote != null)
+                {
                     matchedNote.Reload();
-
+                    AllNotes.Move(AllNotes.IndexOf(matchedNote), 0);
+                }
                 // If note isn't found, it's new; add it.
                 else
-                    AllNotes.Add(new AR_NoteViewModel(Models.AR_Notas.Load(noteId)));
+                    AllNotes.Insert(0, new AR_NoteViewModel(Models.AR_Notas.Load(noteId)));
             }
         }
 
