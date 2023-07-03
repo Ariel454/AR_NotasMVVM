@@ -6,80 +6,60 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
+using AR_Notas.Models;
+using System.Collections.ObjectModel;
 
 namespace AR_Notas.ViewModels
 {
-    internal class AR_NotesViewModel : ObservableObject, IQueryAttributable
+    internal class AR_NotesViewModel : IQueryAttributable
     {
-        private Models.AR_Notas _note;
+        public ObservableCollection<ViewModels.AR_NoteViewModel> AllNotes { get; }
+        public ICommand NewCommand { get; }
+        public ICommand SelectNoteCommand { get; }
 
         public AR_NotesViewModel()
         {
-            _note = new Models.AR_Notas();
-            SaveCommand = new AsyncRelayCommand(Save);
-            DeleteCommand = new AsyncRelayCommand(Delete);
+            AllNotes = new ObservableCollection<ViewModels.AR_NoteViewModel>(Models.AR_Notas.LoadAll().Select(n => new AR_NoteViewModel(n)));
+            NewCommand = new AsyncRelayCommand(NewNoteAsync);
+            SelectNoteCommand = new AsyncRelayCommand<ViewModels.AR_NoteViewModel>(SelectNoteAsync);
         }
 
-        public AR_NotesViewModel(Models.AR_Notas note)
+        private async Task NewNoteAsync()
         {
-            _note = note;
-            SaveCommand = new AsyncRelayCommand(Save);
-            DeleteCommand = new AsyncRelayCommand(Delete);
+            await Shell.Current.GoToAsync(nameof(Views.AR_NotasPage));
         }
 
-        public string Text
+        private async Task SelectNoteAsync(ViewModels.AR_NoteViewModel note)
         {
-            get => _note.Text;
-            set
-            {
-                if (_note.Text != value)
-                {
-                    _note.Text = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public DateTime Date => _note.Date;
-
-        public string Identifier => _note.Filename;
-
-        public ICommand SaveCommand { get; private set; }
-        public ICommand DeleteCommand { get; private set; }
-
-
-        private async Task Save()
-        {
-            _note.Date = DateTime.Now;
-            _note.Save();
-            await Shell.Current.GoToAsync($"..?saved={_note.Filename}");
-        }
-
-        private async Task Delete()
-        {
-            _note.Delete();
-            await Shell.Current.GoToAsync($"..?deleted={_note.Filename}");
+            if (note != null)
+                await Shell.Current.GoToAsync($"{nameof(Views.AR_NotasPage)}?load={note.Identifier}");
         }
 
         void IQueryAttributable.ApplyQueryAttributes(IDictionary<string, object> query)
         {
-            if (query.ContainsKey("load"))
+            if (query.ContainsKey("deleted"))
             {
-                _note = Models.AR_Notas.Load(query["load"].ToString());
-                RefreshProperties();
+                string noteId = query["deleted"].ToString();
+                AR_NoteViewModel matchedNote = AllNotes.Where((n) => n.Identifier == noteId).FirstOrDefault();
+
+                // If note exists, delete it
+                if (matchedNote != null)
+                    AllNotes.Remove(matchedNote);
+            }
+            else if (query.ContainsKey("saved"))
+            {
+                string noteId = query["saved"].ToString();
+                AR_NoteViewModel matchedNote = AllNotes.Where((n) => n.Identifier == noteId).FirstOrDefault();
+
+                // If note is found, update it
+                if (matchedNote != null)
+                    matchedNote.Reload();
+
+                // If note isn't found, it's new; add it.
+                else
+                    AllNotes.Add(new AR_NoteViewModel(Models.AR_Notas.Load(noteId)));
             }
         }
 
-        public void Reload()
-        {
-            _note = Models.AR_Notas.Load(_note.Filename);
-            RefreshProperties();
-        }
-
-        private void RefreshProperties()
-        {
-            OnPropertyChanged(nameof(Text));
-            OnPropertyChanged(nameof(Date));
-        }
     }
 }
